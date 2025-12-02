@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Code Snippets to FluentSnippets Converter
+Plugin Name: CS2FS Converter
 Description: Converts Code Snippets (from wp_snippets table) into FluentSnippets-compatible JSON.
-Version: 1.1
-Author: ChatGPT
+Version: 1.0
+Author: Olivier Fontana | Folla Ky
 */
 
 if (!defined('ABSPATH')) exit;
