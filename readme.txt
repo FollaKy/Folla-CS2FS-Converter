@@ -1,5 +1,4 @@
-# CS2FS Converter
-
+=== CS2FS Converter ===
 Contributors: follaky
 Donate link: https://github.com/follaky
 Tags: code snippets, fluent snippets, migration, import, export
@@ -12,7 +11,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Convert Code Snippets (Code Snippets / Pro) entries to Fluent Snippets importable JSON, save to uploads, and add a one-click "Import local" button inside Fluent Snippets.
 
-## Description
+== Description ==
 
 CS2FS Converter is a WordPress admin tool that reads Code Snippets / Code Snippets Pro entries and turns them into Fluent Snippets importable JSON files.
 
@@ -25,27 +24,28 @@ CS2FS Converter is a WordPress admin tool that reads Code Snippets / Code Snippe
 - Adds a one-click "Import local" cloud icon inside Fluent Snippets to pull the latest export from `uploads/cs2fs_export` without uploading a file.
 - Leaves your database untouched; it only reads from `wp_snippets` and writes JSON files.
 
-## Installation
+== Installation ==
 
 1. Upload the plugin files (`CS2FS-converter.php` and `assets/`) to `/wp-content/plugins/cs2fs-converter/`, or install the plugin ZIP through the WordPress plugins screen.
 2. Activate the plugin through the "Plugins" screen in WordPress.
 3. Go to Tools -> CS2FS Converter to export snippets.
 
-## Frequently Asked Questions
+== Frequently Asked Questions ==
 
-### What do I need installed?
+= What do I need installed? =
 
 Code Snippets (or Code Snippets Pro) must be present so `wp_snippets` exists; Fluent Snippets must be installed to import and to see the inline "Import local" button.
 
-### Where are exports saved?
+= Where are exports saved? =
 
 Each export is downloaded and also saved to `wp-content/uploads/cs2fs_export/`. Fluent Snippets can read from this directory via the provided filter.
 
-### What defaults are applied to exported snippets?
+= What defaults are applied to exported snippets? =
 
 Snippets are marked `draft` and `run_at` defaults to `wp_footer`. Adjust these inside Fluent Snippets after import if needed.
 
-## Changelog
+== Changelog ==
 
-### 1.0
-- Initial release: export from Code Snippets to Fluent Snippets JSON, save to uploads, add inline "Import local" button in Fluent Snippets.
+= 1.0 =
+* Initial release: export from Code Snippets to Fluent Snippets JSON, save to uploads, add inline "Import local" button in Fluent Snippets.
+

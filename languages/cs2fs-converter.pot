@@ -1,0 +1,33 @@
+# Copyright (C) 2025 CS2FS Converter
+# This file is distributed under the GPL2+.
+msgid ""
+msgstr ""
+"Project-Id-Version: CS2FS Converter 1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/cs2fs-converter\n"
+"POT-Creation-Date: 2025-12-03 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: codex-cli\n"
+"X-Domain: cs2fs-converter\n"
+
+#: CS2FS-converter.php:26
+msgid "CS2FS Converter"
+msgstr ""
+
+#: CS2FS-converter.php:89
+msgid "Code Snippets → Fluent Snippets Converter"
+msgstr ""
+
+#: CS2FS-converter.php:90
+msgid "Select the Code Snippets entries you want to export. The generated Fluent Snippets JSON is downloaded and also saved to uploads/cs2fs_export for one-click import."
+msgstr ""
+
+#: CS2FS-converter.php:92
+msgid "No Code Snippets found in wp_snippets table."
+msgstr ""
+
+#: CS2FS-converter.php:44
+msgid "Converter"
+msgstr ""
+
