@@ -9,7 +9,8 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Convert Code Snippets (Code Snippets / Pro) entries to Fluent Snippets importable JSON, save to uploads, and add a one-click "Import local" button inside Fluent Snippets.
+Convert Code Snippets (CodeSnippets Free / Pro) entries to Fluent Snippets importable JSON, save to uploads folder and locally, and add a one-click "Import local" button inside FluentSnippets.
+This plugin is of the "use once" kind - once it's job is done, you can (and should) remove it. It is good practice to remove unused plugins.
 
 == Description ==
 

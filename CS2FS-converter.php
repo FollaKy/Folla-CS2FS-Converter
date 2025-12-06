@@ -2,7 +2,7 @@
 /**
  * Plugin Name:  CS2FS Converter
  * Plugin URI:   https://github.com/follaky/Folla-CS2FS-Converter
- * Description:  Convert Code Snippets (from wp_snippets table) into Fluent Snippets–compatible JSON, save to uploads, and add a one-click “Import local” button in Fluent Snippets.
+ * Description:  Convert Code Snippets (from wp_snippets table) into Fluent Snippets compatible JSON, save to uploads, and add a one-click "Import local" button in Fluent Snippets.
  * Author:       Olivier Fontana | Folla Ky
  * Author URI:   https://github.com/follaky
  * License:      GPL-2.0-or-later
@@ -254,7 +254,7 @@ function csfc_render_converter_page() {
  */
 function csfc_import_local_snippets() {
     if (!current_user_can('install_plugins')) {
-        wp_send_json_error(['message' => __('You do not have permission to import snippets.', 'cs2fs')], 403);
+        wp_send_json_error(['message' => __('You do not have permission to import snippets.', 'cs2fs-converter')], 403);
     }
 
     check_ajax_referer('fluent-snippets', '_nonce');
@@ -262,22 +262,22 @@ function csfc_import_local_snippets() {
     $uploads = wp_get_upload_dir();
     $dir = trailingslashit($uploads['basedir']) . 'cs2fs_export';
     if (!is_dir($dir)) {
-        wp_send_json_error(['message' => __('Local export directory not found. Generate an export first.', 'cs2fs')], 400);
+        wp_send_json_error(['message' => __('Local export directory not found. Generate an export first.', 'cs2fs-converter')], 400);
     }
 
     $latest_file = csfc_get_latest_export_file($dir);
     if (!$latest_file) {
-        wp_send_json_error(['message' => __('No local export JSON files found.', 'cs2fs')], 400);
+        wp_send_json_error(['message' => __('No local export JSON files found.', 'cs2fs-converter')], 400);
     }
 
     $raw = file_get_contents($latest_file);
     if ($raw === false) {
-        wp_send_json_error(['message' => __('Unable to read the latest export file.', 'cs2fs')], 500);
+        wp_send_json_error(['message' => __('Unable to read the latest export file.', 'cs2fs-converter')], 500);
     }
 
     $payload = json_decode($raw, true);
     if (!is_array($payload) || ($payload['file_type'] ?? '') !== 'fluent_code_snippets' || empty($payload['snippets']) || !is_array($payload['snippets'])) {
-        wp_send_json_error(['message' => __('Invalid export file. Expected Fluent Snippets payload.', 'cs2fs')], 400);
+        wp_send_json_error(['message' => __('Invalid export file. Expected Fluent Snippets payload.', 'cs2fs-converter')], 400);
     }
 
     $Arr = '\\FluentSnippets\\App\\Helpers\\Arr';
@@ -286,7 +286,7 @@ function csfc_import_local_snippets() {
     $Snippet = '\\FluentSnippets\\App\\Model\\Snippet';
 
     if (!class_exists($Arr) || !class_exists($Helper) || !class_exists($SnippetsController) || !class_exists($Snippet)) {
-        wp_send_json_error(['message' => __('Fluent Snippets is required for this import.', 'cs2fs')], 400);
+        wp_send_json_error(['message' => __('Fluent Snippets is required for this import.', 'cs2fs-converter')], 400);
     }
 
     $createdSnippets = [];
@@ -339,7 +339,7 @@ function csfc_import_local_snippets() {
         ]);
         $meta['status'] = 'draft';
         if (empty($meta['name'])) {
-            $meta['name'] = sprintf(__('Imported Snippet %s', 'cs2fs'), current_time('mysql'));
+            $meta['name'] = sprintf(__('Imported Snippet %s', 'cs2fs-converter'), current_time('mysql'));
         }
         $meta['priority'] = is_numeric($meta['priority']) ? (int) $meta['priority'] : 10;
 
@@ -472,11 +472,11 @@ function csfc_enqueue_local_import_button($hook) {
         'nonce' => wp_create_nonce('fluent-snippets'),
         'menuSelector' => '.fsnip_menu',
         'strings' => [
-            'buttonText' => __('Import local (CS2FS Converter)', 'cs2fs'),
-            'importingText' => __('Importing...', 'cs2fs'),
-            'successWithCount' => __('Import completed. Added %d snippet(s).', 'cs2fs'),
-            'successGeneric' => __('Import finished.', 'cs2fs'),
-            'failure' => __('Import failed.', 'cs2fs'),
+            'buttonText' => __('Import local (CS2FS Converter)', 'cs2fs-converter'),
+            'importingText' => __('Importing...', 'cs2fs-converter'),
+            'successWithCount' => __('Import completed. Added %d snippet(s).', 'cs2fs-converter'),
+            'successGeneric' => __('Import finished.', 'cs2fs-converter'),
+            'failure' => __('Import failed.', 'cs2fs-converter'),
         ]
     ]);
 }
