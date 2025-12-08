@@ -1,0 +1,152 @@
+# Copyright (C) 2025 CS2FS Converter
+# This file is distributed under the GPL2+.
+msgid ""
+msgstr ""
+"Project-Id-Version: CS2FS Converter 1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/cs2fs-converter\n"
+"POT-Creation-Date: 2025-12-06 00:00+0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Olivier Fontana <olivier.fontana@folla.fi>\n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+"X-Domain: cs2fs-converter\n"
+
+#: CS2FS-converter.php:19
+msgid "CS2FS Converter"
+msgstr "CS2FS-Konverter"
+
+#: CS2FS-converter.php:44
+msgid "Converter"
+msgstr "Konverter"
+
+#: CS2FS-converter.php:91
+msgid "CodeSnippets \\u2192 FluentSnippets Converter"
+msgstr "CodeSnippets \\u2192 FluentSnippets-Konverter"
+
+#: CS2FS-converter.php:92
+msgid ""
+"Select the CodeSnippets entries you want to export. The generated "
+"FluentSnippets JSON is downloaded and also saved to uploads/cs2fs_export for "
+"one-click import."
+msgstr ""
+"Wählen Sie die CodeSnippets-Einträge aus, die Sie exportieren möchten. Die "
+"generierte FluentSnippets-JSON-Datei wird heruntergeladen und zur einfachen "
+"Einbindung in uploads/cs2fs_export gespeichert."
+
+#: CS2FS-converter.php:94
+msgid "No CodeSnippets found in wp_snippets table."
+msgstr "Keine CodeSnippets in der Tabelle wp_snippets gefunden."
+
+#: CS2FS-converter.php:101
+msgid "Name"
+msgstr "Name"
+
+#: CS2FS-converter.php:102
+msgid "Description"
+msgstr "Beschreibung"
+
+#: CS2FS-converter.php:103
+msgid "Type"
+msgstr "Typ"
+
+#: CS2FS-converter.php:104
+msgid "Change Type"
+msgstr "Typ ändern"
+
+#: CS2FS-converter.php:105 CS2FS-converter.php:118
+msgid "Include"
+msgstr "Einschließen"
+
+#: CS2FS-converter.php:112
+msgid "Auto (%s)"
+msgstr "Auto (%s)"
+
+#: CS2FS-converter.php:113 CS2FS-converter.php:295
+msgid "PHP"
+msgstr "PHP"
+
+#: CS2FS-converter.php:114
+msgid "PHP + HTML"
+msgstr "PHP + HTML"
+
+#: CS2FS-converter.php:115
+msgid "JS"
+msgstr "JS"
+
+#: CS2FS-converter.php:116
+msgid "CSS"
+msgstr "CSS"
+
+#: CS2FS-converter.php:123
+msgid "Generate FluentSnippets JSON"
+msgstr "FluentSnippets JSON generieren"
+
+#: CS2FS-converter.php:143
+msgid ""
+"CodeSnippets (or CodeSnippets Pro) is not detected. Export will be empty "
+"unless the wp_snippets table exists."
+msgstr ""
+"CodeSnippets (oder CodeSnippets Pro) wurde nicht erkannt. Der Export bleibt "
+"leer, wenn die Tabelle wp_snippets nicht vorhanden ist."
+
+#: CS2FS-converter.php:146
+msgid ""
+"FluentSnippets is not detected. The inline import button will not work until "
+"it is installed and active."
+msgstr ""
+"FluentSnippets wurde nicht erkannt. Die Inline-Import-Schaltfläche "
+"funktioniert erst, wenn das Programm installiert und aktiviert ist."
+
+#: CS2FS-converter.php:160
+msgid "You do not have permission to import snippets."
+msgstr "Sie haben keine Berechtigung zum Importieren von Snippets."
+
+#: CS2FS-converter.php:165
+msgid "Local export directory not found. Generate an export first."
+msgstr ""
+"Lokales Exportverzeichnis nicht gefunden. Erstellen Sie zunächst einen "
+"Export."
+
+#: CS2FS-converter.php:170
+msgid "No local export JSON files found."
+msgstr "Keine lokalen JSON-Exportdateien gefunden."
+
+#: CS2FS-converter.php:175
+msgid "Unable to read the latest export file."
+msgstr "Die neueste Exportdatei kann nicht gelesen werden."
+
+#: CS2FS-converter.php:180
+msgid "Invalid export file. Expected FluentSnippets payload."
+msgstr "Ungültige Exportdatei. FluentSnippets-Nutzlast erwartet."
+
+#: CS2FS-converter.php:192
+msgid "FluentSnippets is required for this import."
+msgstr "Für diesen Import ist FluentSnippets erforderlich."
+
+#: CS2FS-converter.php:236
+msgid "Imported Snippet %s"
+msgstr "Importierte Snippets %s"
+
+#: CS2FS-converter.php:325
+msgid "Import local (CS2FS Converter)"
+msgstr "Lokal importieren (CS2FS-Konverter)"
+
+#: CS2FS-converter.php:326
+msgid "Importing..."
+msgstr "Importiere..."
+
+#: CS2FS-converter.php:327
+msgid "Import completed. Added %d snippet(s)."
+msgstr "Import abgeschlossen. %d Snippet(s) hinzugefügt."
+
+#: CS2FS-converter.php:328
+msgid "Import finished."
+msgstr "Import abgeschlossen."
+
+#: CS2FS-converter.php:329
+msgid "Import failed."
+msgstr "Import fehlgeschlagen."

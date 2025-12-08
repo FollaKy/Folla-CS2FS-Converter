@@ -33,6 +33,7 @@ add_filter('fluent_snippets_asset_listed_slugs', 'csfc_whitelist_assets');
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'csfc_plugin_action_links');
 add_action('plugins_loaded', 'csfc_load_textdomain');
 add_action('admin_notices', 'csfc_dependency_notices');
+add_action('admin_enqueue_scripts', 'csfc_enqueue_admin_styles');
 
 function csfc_load_textdomain() {
     load_plugin_textdomain('cs2fs-converter', false, dirname(plugin_basename(__FILE__)) . '/languages');
@@ -42,6 +43,15 @@ function csfc_plugin_action_links($links) {
     $settings_link = '<a href="' . esc_url(admin_url('tools.php?page=cs2fs-converter')) . '">' . esc_html__('Converter', 'cs2fs-converter') . '</a>';
     array_unshift($links, $settings_link);
     return $links;
+}
+
+function csfc_enqueue_admin_styles($hook) {
+    if ($hook === 'toplevel_page_fluent-snippets') {
+        $css = '.csfc-import-local-item{margin-left:12px;display:flex;align-items:center;}' .
+            '.csfc-import-local{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;line-height:20px;height:auto;}' .
+            '.csfc-import-local .dashicons{margin:0;}';
+        wp_add_inline_style('dashicons', $css);
+    }
 }
 
 /**
@@ -219,7 +229,11 @@ function csfc_render_converter_page() {
     echo '<form method="post">';
     wp_nonce_field('csfc_export', 'csfc_nonce');
     echo '<table class="widefat"><thead><tr>
-        <th>Name</th><th>Description</th><th>Type</th><th>Change Type</th><th>Include</th>
+        <th>' . esc_html__('Name', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Description', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Type', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Change Type', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Include', 'cs2fs-converter') . '</th>
     </tr></thead><tbody>';
     foreach ($snippets as $i => $snippet) {
         $type = strtolower($snippet->scope ?? 'php');
@@ -234,19 +248,19 @@ function csfc_render_converter_page() {
         echo '<td>' . esc_html(wp_trim_words($snippet_desc, 20)) . '</td>';
         echo '<td>' . esc_html($type) . '</td>';
         echo '<td><select name="override_type[' . $i . ']">
-            <option value="">Auto (' . esc_attr($type) . ')</option>
-            <option value="php">PHP</option>
-            <option value="php_content">PHP + HTML</option>
-            <option value="js">JS</option>
-            <option value="css">CSS</option>
+            <option value="">' . sprintf(esc_html__('Auto (%s)', 'cs2fs-converter'), esc_attr($type)) . '</option>
+            <option value="php">' . esc_html__('PHP', 'cs2fs-converter') . '</option>
+            <option value="php_content">' . esc_html__('PHP + HTML', 'cs2fs-converter') . '</option>
+            <option value="js">' . esc_html__('JS', 'cs2fs-converter') . '</option>
+            <option value="css">' . esc_html__('CSS', 'cs2fs-converter') . '</option>
         </select></td>';
-        echo '<td><input type="checkbox" name="include[' . $i . ']" value="1" checked></td>';
+        echo '<td><label><input type="checkbox" name="include[' . $i . ']" value="1" checked> ' . esc_html__('Include', 'cs2fs-converter') . '</label></td>';
         echo '<input type="hidden" name="snippet[' . $i . '][name]" value="' . esc_attr($snippet->name) . '">';
         echo '<textarea name="snippet[' . $i . '][desc]" style="display:none;">' . esc_textarea($snippet_desc) . '</textarea>';
         echo '<input type="hidden" name="snippet[' . $i . '][code]" value="' . esc_attr($snippet->code) . '">';
         echo '</tr>';
     }
-    echo '</tbody></table><br><input type="submit" name="generate_json" class="button button-primary" value="Generate FluentSnippets JSON"></form></div>';
+    echo '</tbody></table><br><input type="submit" name="generate_json" class="button button-primary" value="' . esc_attr__('Generate Fluent Snippets JSON', 'cs2fs-converter') . '"></form></div>';
 }
 
 /**
