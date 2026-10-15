@@ -10,6 +10,7 @@
     const successWithCount = strings.successWithCount || 'Import completed. Added %d snippet(s).';
     const successGeneric = strings.successGeneric || 'Import finished.';
     const failureText = strings.failure || 'Import failed.';
+    const attentionText = strings.attention || 'Check these before publishing:';
 
     const injectButton = function() {
         const $menu = $(menuSelector);
@@ -49,6 +50,12 @@
                             return name + ': ' + reason + extra;
                         }).join('\n');
                         msg += '\nSkipped: ' + skipped.length + '\n' + details;
+                    }
+                    const attention = resp.attention || [];
+                    if (attention.length) {
+                        msg += '\n\n' + attentionText + '\n' + attention.map(function(item) {
+                            return '- ' + (item.name || '(no name)') + ': ' + (item.notes || []).join(' ');
+                        }).join('\n');
                     }
                     alert(msg);
                     window.location.reload();

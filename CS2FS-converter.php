@@ -9,7 +9,7 @@
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:  cs2fs-converter
  * Domain Path:  /languages
- * Version:      1.0
+ * Version:      1.1
  * Requires PHP: 7.4
  * Requires at least: 6.0
  */
@@ -88,40 +88,191 @@ function csfc_dependency_notices() {
     echo '</ul></div>';
 }
 
+/**
+ * Code Snippets scope → Fluent Snippets type and run location.
+ *
+ * Fluent Snippets run locations: PHP all/backend; js wp_head/wp_footer/
+ * admin_head/admin_footer; css wp_head/admin_head; php_content wp_head/
+ * wp_footer/wp_body_open/before_content/after_content/shortcode.
+ *
+ * @return array
+ */
+function csfc_scope_map() {
+    return [
+        'global'         => ['type' => 'PHP', 'run_at' => 'all'],
+        'admin'          => ['type' => 'PHP', 'run_at' => 'backend'],
+        // Fluent Snippets has no front-end-only PHP location, so guard the code instead.
+        'front-end'      => ['type' => 'PHP', 'run_at' => 'all', 'prefix' => "if ( is_admin() ) {\n\treturn;\n}\n"],
+        'single-use'     => ['type' => 'PHP', 'run_at' => 'all', 'note' => 'single_use'],
+        'content'        => ['type' => 'php_content', 'run_at' => 'shortcode', 'note' => 'shortcode'],
+        'head-content'   => ['type' => 'php_content', 'run_at' => 'wp_head'],
+        'body-content'   => ['type' => 'php_content', 'run_at' => 'wp_body_open'],
+        'footer-content' => ['type' => 'php_content', 'run_at' => 'wp_footer'],
+        'admin-css'      => ['type' => 'css', 'run_at' => 'admin_head'],
+        'site-css'       => ['type' => 'css', 'run_at' => 'wp_head'],
+        'site-head-js'   => ['type' => 'js', 'run_at' => 'wp_head'],
+        'site-footer-js' => ['type' => 'js', 'run_at' => 'wp_footer'],
+    ];
+}
+
+/**
+ * Default run location when the user overrides the type.
+ *
+ * @return array
+ */
+function csfc_type_defaults() {
+    return [
+        'PHP'         => 'all',
+        'php_content' => 'wp_footer',
+        'js'          => 'wp_footer',
+        'css'         => 'wp_head',
+    ];
+}
+
+/**
+ * Human-readable notes for the listing and the import report.
+ *
+ * @return array
+ */
+function csfc_note_texts() {
+    return [
+        'was_active'      => __('Active in Code Snippets: publish it in Fluent Snippets after deactivating Code Snippets.', 'cs2fs-converter'),
+        'condition'       => __('Had a Code Snippets condition. Fluent Snippets conditions work differently; recreate it by hand.', 'cs2fs-converter'),
+        'single_use'      => __('Single-use snippet. Fluent Snippets has no "run once"; publishing it runs it on every request.', 'cs2fs-converter'),
+        'shortcode'       => __('Content snippet. Replace [code_snippet] shortcodes on your pages with the Fluent Snippets shortcode.', 'cs2fs-converter'),
+        'unknown_scope'   => __('Unknown scope; imported as PHP that runs everywhere. Check it before publishing.', 'cs2fs-converter'),
+        'priority_raised' => __('Priority below 1 raised to 1 (Fluent Snippets minimum).', 'cs2fs-converter'),
+    ];
+}
+
+/**
+ * Work out how one Code Snippets row maps to Fluent Snippets.
+ *
+ * @param object $row      Row from the Code Snippets table.
+ * @param string $override Optional type chosen by the user.
+ * @return array|null Mapping, or null for rows that are not code (condition definitions).
+ */
+function csfc_map_snippet($row, $override = '') {
+    $scope = strtolower((string) ($row->scope ?? 'global'));
+    if ($scope === 'condition') {
+        return null;
+    }
+
+    $map = csfc_scope_map();
+    $notes = [];
+
+    if (isset($map[$scope])) {
+        $mapping = $map[$scope];
+    } else {
+        $mapping = ['type' => 'PHP', 'run_at' => 'all'];
+        $notes[] = 'unknown_scope';
+    }
+
+    $defaults = csfc_type_defaults();
+    if ($override && isset($defaults[$override]) && $override !== $mapping['type']) {
+        $mapping = ['type' => $override, 'run_at' => $defaults[$override]];
+    }
+
+    if (!empty($mapping['note'])) {
+        $notes[] = $mapping['note'];
+    }
+    if ((int) ($row->active ?? 0) === 1) {
+        $notes[] = 'was_active';
+    }
+    if ((int) ($row->condition_id ?? 0) > 0) {
+        $notes[] = 'condition';
+    }
+
+    $priority = (int) ($row->priority ?? 10);
+    if ($priority < 1) {
+        $priority = 1;
+        $notes[] = 'priority_raised';
+    }
+
+    return [
+        'type'     => $mapping['type'],
+        'run_at'   => $mapping['run_at'],
+        'prefix'   => $mapping['prefix'] ?? '',
+        'priority' => $priority,
+        'notes'    => $notes,
+    ];
+}
+
+/**
+ * Read Code Snippets rows (trash excluded), optionally limited to some IDs.
+ *
+ * @param int[]|null $ids
+ * @return object[]
+ */
+function csfc_get_code_snippets($ids = null) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'snippets';
+
+    if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) !== $table) {
+        return [];
+    }
+
+    // Code Snippets marks trashed snippets with active = -1.
+    $sql = "SELECT * FROM `$table` WHERE active >= 0";
+    if (is_array($ids)) {
+        $ids = array_filter(array_map('absint', $ids));
+        if (!$ids) {
+            return [];
+        }
+        $sql .= ' AND id IN (' . implode(',', $ids) . ')';
+    }
+
+    return $wpdb->get_results($sql . ' ORDER BY id') ?: [];
+}
+
+/**
+ * Flatten a Code Snippets description to one line (Fluent Snippets keeps meta in a docblock).
+ *
+ * @param string $html
+ * @return string
+ */
+function csfc_plain_description($html) {
+    $text = html_entity_decode(wp_strip_all_tags((string) $html), ENT_QUOTES, 'UTF-8');
+    return trim(preg_replace('/\s+/', ' ', $text));
+}
+
 function csfc_handle_export() {
     if (!isset($_POST['generate_json'])) return;
     if (!isset($_GET['page']) || $_GET['page'] !== 'cs2fs-converter') return;
     if (!current_user_can('manage_options')) return;
     check_admin_referer('csfc_export', 'csfc_nonce');
 
+    $includes = isset($_POST['include']) ? array_keys((array) wp_unslash($_POST['include'])) : [];
+    $overrides = isset($_POST['override_type']) ? (array) wp_unslash($_POST['override_type']) : [];
+
     $export_snippets = [];
-    $posted_snippets = isset($_POST['snippet']) ? wp_unslash($_POST['snippet']) : [];
-    $includes = isset($_POST['include']) ? wp_unslash($_POST['include']) : [];
-    $overrides = isset($_POST['override_type']) ? wp_unslash($_POST['override_type']) : [];
+    foreach (csfc_get_code_snippets($includes) as $row) {
+        $override = sanitize_key($overrides[$row->id] ?? '');
+        $override = $override === 'php' ? 'PHP' : $override;
+        $mapping = csfc_map_snippet($row, $override);
+        if (!$mapping) {
+            continue;
+        }
 
-    foreach ($posted_snippets as $i => $s) {
-        if (empty($includes[$i])) continue;
+        $code = (string) $row->code;
+        if ($mapping['type'] === 'PHP') {
+            // Code Snippets stores PHP without the open tag; Fluent Snippets files need it.
+            $code = preg_replace('/^\s*<\?php\s*/i', '', $code);
+            $code = '<?php' . PHP_EOL . $mapping['prefix'] . $code;
+        }
 
-        $type = $overrides[$i] ?? 'php';
-        $type = in_array($type, ['php', 'php_content', 'js', 'css'], true) ? $type : 'php';
-
-        $code = (string) ($s['code'] ?? '');
-        $encoded_code = base64_encode($code);
-
-        // Accept both desc (form) and description (fallback) keys.
-        $desc_raw = $s['desc'] ?? ($s['description'] ?? '');
-        $desc = html_entity_decode(wp_kses_post($desc_raw));
+        $tags = implode(', ', array_filter(array_map('trim', explode(',', (string) ($row->tags ?? '')))));
 
         $export_snippets[] = [
-            'code' => $encoded_code,
+            'code' => base64_encode($code),
             'code_hash' => md5($code),
             'info' => [
-                'name' => sanitize_text_field($s['name'] ?? ''),
+                'name' => sanitize_text_field($row->name) ?: sprintf('Code Snippet #%d', $row->id),
                 'status' => 'draft',
-                'tags' => '',
-                'description' => $desc,
-                'type' => $type,
-                'run_at' => 'wp_footer',
+                'tags' => sanitize_text_field($tags),
+                'description' => csfc_plain_description($row->description ?? ''),
+                'type' => $mapping['type'],
+                'run_at' => $mapping['run_at'],
                 'group' => '',
                 'condition' => [
                     'status' => 'no',
@@ -136,7 +287,13 @@ function csfc_handle_export() {
                 'updated_at' => current_time('mysql'),
                 'is_valid' => '1',
                 'updated_by' => (string) get_current_user_id(),
-                'priority' => '10'
+                'priority' => (string) $mapping['priority']
+            ],
+            // Ignored by Fluent Snippets' own importer; used for the CS2FS import report.
+            'cs2fs' => [
+                'source_id' => (int) $row->id,
+                'scope' => (string) $row->scope,
+                'notes' => $mapping['notes']
             ]
         ];
     }
@@ -215,12 +372,12 @@ function csfc_register_local_exports($files) {
 }
 
 function csfc_render_converter_page() {
-    global $wpdb;
-    $snippets_table = $wpdb->prefix . 'snippets';
-    $snippets = $wpdb->get_results("SELECT * FROM $snippets_table");
+    $snippets = csfc_get_code_snippets();
+    $note_texts = csfc_note_texts();
 
     echo '<div class="wrap"><h1>' . esc_html__('Code Snippets → Fluent Snippets Converter', 'cs2fs-converter') . '</h1>';
     echo '<p>' . esc_html__('Select the Code Snippets entries you want to export. The generated Fluent Snippets JSON is downloaded and also saved to uploads/cs2fs_export for one-click import.', 'cs2fs-converter') . '</p>';
+    echo '<p>' . esc_html__('Snippets are imported as drafts. Trashed snippets are not listed.', 'cs2fs-converter') . '</p>';
     if (empty($snippets)) {
         echo '<p>' . esc_html__('No Code Snippets found in wp_snippets table.', 'cs2fs-converter') . '</p></div>';
         return;
@@ -228,36 +385,38 @@ function csfc_render_converter_page() {
 
     echo '<form method="post">';
     wp_nonce_field('csfc_export', 'csfc_nonce');
-    echo '<table class="widefat"><thead><tr>
-        <th>' . esc_html__('Name', 'cs2fs-converter') . '</th>
-        <th>' . esc_html__('Description', 'cs2fs-converter') . '</th>
-        <th>' . esc_html__('Type', 'cs2fs-converter') . '</th>
-        <th>' . esc_html__('Change Type', 'cs2fs-converter') . '</th>
+    echo '<table class="widefat striped"><thead><tr>
         <th>' . esc_html__('Include', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Name', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Code Snippets scope', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Fluent Snippets type / location', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Change Type', 'cs2fs-converter') . '</th>
+        <th>' . esc_html__('Notes', 'cs2fs-converter') . '</th>
     </tr></thead><tbody>';
-    foreach ($snippets as $i => $snippet) {
-        $type = strtolower($snippet->scope ?? 'php');
-        if ($type === 'site-css') $type = 'css';
-        elseif (str_contains($type, 'js')) $type = 'js';
-        elseif ($type === 'content') $type = 'php_content';
-        elseif (!in_array($type, ['php', 'js', 'css', 'php_content'])) $type = 'php';
+    foreach ($snippets as $snippet) {
+        $id = (int) $snippet->id;
+        $mapping = csfc_map_snippet($snippet);
+        if (!$mapping) {
+            continue; // Condition definitions, not code.
+        }
 
         echo '<tr>';
-        echo '<td>' . esc_html($snippet->name) . '</td>';
-        $snippet_desc = isset($snippet->desc) ? (string) $snippet->desc : ((isset($snippet->description) ? (string) $snippet->description : ''));
-        echo '<td>' . esc_html(wp_trim_words($snippet_desc, 20)) . '</td>';
-        echo '<td>' . esc_html($type) . '</td>';
-        echo '<td><select name="override_type[' . $i . ']">
-            <option value="">' . sprintf(esc_html__('Auto (%s)', 'cs2fs-converter'), esc_attr($type)) . '</option>
+        echo '<td><input type="checkbox" name="include[' . $id . ']" value="1" checked aria-label="' . esc_attr__('Include', 'cs2fs-converter') . '"></td>';
+        echo '<td><strong>' . esc_html($snippet->name) . '</strong><br><span class="description">' . esc_html(wp_trim_words(csfc_plain_description($snippet->description ?? ''), 20)) . '</span></td>';
+        echo '<td><code>' . esc_html($snippet->scope) . '</code></td>';
+        echo '<td>' . esc_html($mapping['type'] . ' / ' . $mapping['run_at']) . '</td>';
+        echo '<td><select name="override_type[' . $id . ']">
+            <option value="">' . esc_html__('Auto', 'cs2fs-converter') . '</option>
             <option value="php">' . esc_html__('PHP', 'cs2fs-converter') . '</option>
             <option value="php_content">' . esc_html__('PHP + HTML', 'cs2fs-converter') . '</option>
             <option value="js">' . esc_html__('JS', 'cs2fs-converter') . '</option>
             <option value="css">' . esc_html__('CSS', 'cs2fs-converter') . '</option>
         </select></td>';
-        echo '<td><label><input type="checkbox" name="include[' . $i . ']" value="1" checked> ' . esc_html__('Include', 'cs2fs-converter') . '</label></td>';
-        echo '<input type="hidden" name="snippet[' . $i . '][name]" value="' . esc_attr($snippet->name) . '">';
-        echo '<textarea name="snippet[' . $i . '][desc]" style="display:none;">' . esc_textarea($snippet_desc) . '</textarea>';
-        echo '<input type="hidden" name="snippet[' . $i . '][code]" value="' . esc_attr($snippet->code) . '">';
+        echo '<td>';
+        foreach ($mapping['notes'] as $note) {
+            echo '<div>' . esc_html($note_texts[$note] ?? $note) . '</div>';
+        }
+        echo '</td>';
         echo '</tr>';
     }
     echo '</tbody></table><br><input type="submit" name="generate_json" class="button button-primary" value="' . esc_attr__('Generate Fluent Snippets JSON', 'cs2fs-converter') . '"></form></div>';
@@ -267,7 +426,8 @@ function csfc_render_converter_page() {
  * AJAX endpoint to import the newest local CS2FS export into Fluent Snippets.
  */
 function csfc_import_local_snippets() {
-    if (!current_user_can('install_plugins')) {
+    // Same capability as the converter page; Fluent Snippets itself needs unfiltered_html to save code.
+    if (!current_user_can('manage_options') || !current_user_can('unfiltered_html')) {
         wp_send_json_error(['message' => __('You do not have permission to import snippets.', 'cs2fs-converter')], 403);
     }
 
@@ -305,6 +465,7 @@ function csfc_import_local_snippets() {
 
     $createdSnippets = [];
     $skipped = [];
+    $attention = [];
     $snippetModel = new $Snippet();
     $existingHashes = csfc_get_existing_snippet_hashes($snippetModel);
 
@@ -407,13 +568,25 @@ function csfc_import_local_snippets() {
             'reason' => 'Imported'
         ];
         $existingHashes[] = $hash;
+
+        $notes = (array) $Arr::get($snippet, 'cs2fs.notes', []);
+        if ($notes) {
+            $noteTexts = csfc_note_texts();
+            $attention[] = [
+                'name' => $meta['name'] ?? '',
+                'notes' => array_map(function ($note) use ($noteTexts) {
+                    return $noteTexts[$note] ?? $note;
+                }, $notes)
+            ];
+        }
     }
 
     $Helper::cacheSnippetIndex();
 
     wp_send_json([
         'snippets' => $createdSnippets,
-        'skipped' => $skipped
+        'skipped' => $skipped,
+        'attention' => $attention
     ]);
 }
 
@@ -477,7 +650,7 @@ function csfc_enqueue_local_import_button($hook) {
         $handle,
         plugins_url('assets/csfc-import-local.js', __FILE__),
         ['jquery'],
-        '1.0.0',
+        '1.1.0',
         true
     );
 
@@ -491,6 +664,7 @@ function csfc_enqueue_local_import_button($hook) {
             'successWithCount' => __('Import completed. Added %d snippet(s).', 'cs2fs-converter'),
             'successGeneric' => __('Import finished.', 'cs2fs-converter'),
             'failure' => __('Import failed.', 'cs2fs-converter'),
+            'attention' => __('Check these before publishing:', 'cs2fs-converter'),
         ]
     ]);
 }

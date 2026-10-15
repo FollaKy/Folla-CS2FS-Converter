@@ -9,12 +9,20 @@ not developed further.
 GitHub: `FollaKy/Folla-CS2FS-Migrator` (the plugin header's Plugin URI still
 says `…-Converter`). Text domain `cs2fs-converter`; EN, de_DE, fi.
 
-## Status (review 2026-10-14)
+## Status (1.1, 2026-10-15)
 
-The user remembers conversions being unreliable ("some snippet types were not
-converted correctly"). A code review against current sources confirmed why.
-Nothing has been changed yet. **Next session: tidy, rewrite the mapping, test
-locally** (see "Plan" below).
+Plan steps 1-4 are done: the tidy-up is commit 963a14c, and the rewrite is version 1.1 (`csfc_scope_map()` /
+`csfc_map_snippet()`; export reads rows by ID server-side). Tested on the XAMPP
+`wordpress` site (Code Snippets 3.3.0 + Fluent Snippets 10.56): 15 snippets,
+all scopes; type, run_at, priority, tags, draft status and code verified in FS;
+trash excluded; attention report correct. Test rows are named "CS2FS test …"
+in `wp_snippets`, and FS + the converter are still installed there.
+
+Not yet tested: Code Snippets 4.x (`condition_id`, `condition` rows) — local
+site runs 3.3.0. Open: de_DE/fi translations lack the new 1.1 strings;
+release zip not built.
+
+The defect list below is the original 2026-10-14 review, kept for reference.
 
 Sources used for the review:
 - **Code Snippets 4.0.0**, downloaded from wp.org (scopes in
