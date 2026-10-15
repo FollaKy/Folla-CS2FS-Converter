@@ -1,18 +1,19 @@
 # CS2FS Converter
 
 Contributors: follaky
-Donate link: https://github.com/follaky
 Tags: code snippets, fluent snippets, migration, import, export
-Requires at least: 6.0
-Tested up to: 6.9
+Requires at least: 6.2
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Convert Code Snippets (Code Snippets / Pro) entries to Fluent Snippets importable JSON, save to uploads, and add a one-click "Import local" button inside Fluent Snippets.
+Move your Code Snippets (free or Pro) to Fluent Snippets: the right type and location for every snippet, imported as drafts in one click.
 
 ## Description
+
+This is a "use once" plugin: when your snippets are moved, deactivate and delete it.
 
 CS2FS Converter is a WordPress admin tool that reads Code Snippets / Code Snippets Pro entries and turns them into Fluent Snippets importable JSON files.
 
@@ -22,7 +23,7 @@ CS2FS Converter is a WordPress admin tool that reads Code Snippets / Code Snippe
 - Lists snippets from the `wp_snippets` table (trash excluded) with their Code Snippets scope, the Fluent Snippets type and run location they map to, and notes on anything you must check by hand. You choose which to include and can override the type.
 - Maps every Code Snippets scope to the matching Fluent Snippets type and run location (see the table below), and keeps tags and priority.
 - Generates a Fluent Snippets JSON export (code is base64-encoded, snippets are marked draft) and downloads it as `fluent-snippets-export-YYYY-MM-DD.json`. Code is read from the database on the server, not posted through the browser.
-- Saves the same export in `wp-content/uploads/cs2fs_export/` and registers those files via the `fluent_snippets_local_import_files` filter so Fluent Snippets can offer them as "Local" imports.
+- Saves the same export in `wp-content/uploads/cs2fs_export/` (direct web access blocked, random file name) for the one-click import below.
 - Adds a one-click "Import local" button inside Fluent Snippets to pull the latest export from `uploads/cs2fs_export` without uploading a file. The import report lists snippets that need attention (was active, had a condition, single-use, content shortcode).
 - Leaves your database untouched; it only reads from `wp_snippets` and writes JSON files.
 
@@ -60,7 +61,7 @@ Code Snippets (or Code Snippets Pro) must be present so `wp_snippets` exists; Fl
 
 ### Where are exports saved?
 
-Each export is downloaded and also saved to `wp-content/uploads/cs2fs_export/`. Fluent Snippets can read from this directory via the provided filter.
+Each export is downloaded and also saved to `wp-content/uploads/cs2fs_export/`, where the "Import local" button picks up the newest file. The folder has an `.htaccess` deny rule and random file names; on Nginx, block `/wp-content/uploads/cs2fs_export/` in the server config, or delete the files after importing.
 
 ### What defaults are applied to exported snippets?
 
@@ -74,6 +75,8 @@ Snippets are imported as `draft`, so nothing runs twice while Code Snippets is s
 - Flag snippets that were active, had a condition, are single-use or are content shortcodes.
 - Read code on the server instead of posting it through the form; works on PHP 7.4.
 - Finnish translation now loads (file renamed to the `fi` locale).
+- Exports saved on the server get a random file name and a deny rule, so the snippet code cannot be downloaded from the web.
+- German and Finnish translations complete. Requires WordPress 6.2.
 
 ### 1.0
 - Initial release: export from Code Snippets to Fluent Snippets JSON, save to uploads, add inline "Import local" button in Fluent Snippets.

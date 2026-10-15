@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:  CS2FS Converter
- * Plugin URI:   https://github.com/follaky/Folla-CS2FS-Converter
+ * Plugin URI:   https://github.com/FollaKy/Folla-CS2FS-Migrator
  * Description:  Convert Code Snippets (from wp_snippets table) into Fluent Snippets compatible JSON, save to uploads, and add a one-click "Import local" button in Fluent Snippets.
  * Author:       Olivier Fontana | Folla Ky
  * Author URI:   https://github.com/follaky
@@ -11,7 +11,7 @@
  * Domain Path:  /languages
  * Version:      1.1
  * Requires PHP: 7.4
- * Requires at least: 6.0
+ * Requires at least: 6.2
  */
 
 if (!defined('ABSPATH')) exit;
@@ -31,12 +31,14 @@ add_action('wp_ajax_fluent_snippets_import_local', 'csfc_import_local_snippets')
 add_action('admin_enqueue_scripts', 'csfc_enqueue_local_import_button');
 add_filter('fluent_snippets_asset_listed_slugs', 'csfc_whitelist_assets');
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'csfc_plugin_action_links');
-add_action('plugins_loaded', 'csfc_load_textdomain');
+add_action('init', 'csfc_load_textdomain');
 add_action('admin_notices', 'csfc_dependency_notices');
 add_action('admin_enqueue_scripts', 'csfc_enqueue_admin_styles');
 
 function csfc_load_textdomain() {
-    load_plugin_textdomain('cs2fs-converter', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    // Bundled de_DE and fi translations; translate.wordpress.org packs take precedence once they exist.
+    load_plugin_textdomain( // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
+        'cs2fs-converter', false, dirname(plugin_basename(__FILE__)) . '/languages');
 }
 
 function csfc_plugin_action_links($links) {
@@ -208,21 +210,30 @@ function csfc_get_code_snippets($ids = null) {
     global $wpdb;
     $table = $wpdb->prefix . 'snippets';
 
+    // Reads another plugin's table once per request; caching would not help.
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) !== $table) {
         return [];
     }
 
     // Code Snippets marks trashed snippets with active = -1.
-    $sql = "SELECT * FROM `$table` WHERE active >= 0";
-    if (is_array($ids)) {
-        $ids = array_filter(array_map('absint', $ids));
-        if (!$ids) {
-            return [];
-        }
-        $sql .= ' AND id IN (' . implode(',', $ids) . ')';
+    if (!is_array($ids)) {
+        $rows = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE active >= 0 ORDER BY id', $table));
+        return $rows ?: [];
     }
 
-    return $wpdb->get_results($sql . ' ORDER BY id') ?: [];
+    $ids = array_values(array_filter(array_map('absint', $ids)));
+    if (!$ids) {
+        return [];
+    }
+    $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+    $rows = $wpdb->get_results(
+        // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built above.
+        $wpdb->prepare("SELECT * FROM %i WHERE active >= 0 AND id IN ($placeholders) ORDER BY id", array_merge([$table], $ids))
+    );
+    // phpcs:enable
+
+    return $rows ?: [];
 }
 
 /**
@@ -242,8 +253,8 @@ function csfc_handle_export() {
     if (!current_user_can('manage_options')) return;
     check_admin_referer('csfc_export', 'csfc_nonce');
 
-    $includes = isset($_POST['include']) ? array_keys((array) wp_unslash($_POST['include'])) : [];
-    $overrides = isset($_POST['override_type']) ? (array) wp_unslash($_POST['override_type']) : [];
+    $includes = isset($_POST['include']) ? array_map('absint', array_keys((array) wp_unslash($_POST['include']))) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- keys only, absint.
+    $overrides = isset($_POST['override_type']) ? array_map('sanitize_key', (array) wp_unslash($_POST['override_type'])) : [];
 
     $export_snippets = [];
     foreach (csfc_get_code_snippets($includes) as $row) {
@@ -312,9 +323,9 @@ function csfc_handle_export() {
 
     csfc_save_export_locally($json);
 
-    header('Content-disposition: attachment; filename=fluent-snippets-export-' . date('Y-m-d') . '.json');
+    header('Content-disposition: attachment; filename=fluent-snippets-export-' . gmdate('Y-m-d') . '.json');
     header('Content-type: application/json; charset=' . get_option('blog_charset'));
-    echo $json;
+    echo $json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON file download, not HTML.
     exit;
 }
 
@@ -340,35 +351,19 @@ function csfc_save_export_locally($json) {
     $dir = trailingslashit($uploads['basedir']) . 'cs2fs_export';
     wp_mkdir_p($dir);
 
-    $filename = 'fluent-snippets-export-' . date('Y-m-d') . '.json';
+    // The export holds site code: block direct access and use an unguessable name.
+    if (!file_exists($dir . '/index.php')) {
+        file_put_contents($dir . '/index.php', "<?php\n// Silence is golden.\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+    }
+    if (!file_exists($dir . '/.htaccess')) {
+        file_put_contents($dir . '/.htaccess', "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tDeny from all\n</IfModule>\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+    }
+
+    $filename = 'fluent-snippets-export-' . gmdate('Y-m-d') . '-' . wp_generate_password(16, false) . '.json';
     $path = trailingslashit($dir) . $filename;
 
-    // Suppress errors; user still gets the download even if write fails.
-    file_put_contents($path, $json);
-}
-
-// Expose server-side exports to FluentSnippets import (if the plugin checks this filter).
-add_filter('fluent_snippets_local_import_files', 'csfc_register_local_exports');
-function csfc_register_local_exports($files) {
-    $uploads = wp_upload_dir();
-    if (!empty($uploads['error'])) {
-        return $files;
-    }
-
-    $dir = trailingslashit($uploads['basedir']) . 'cs2fs_export';
-    if (!is_dir($dir)) {
-        return $files;
-    }
-
-    $local_files = glob(trailingslashit($dir) . '*.json') ?: [];
-    foreach ($local_files as $file) {
-        $files[] = [
-            'path' => $file,
-            'label' => basename($file),
-        ];
-    }
-
-    return $files;
+    // The user still gets the download if this write fails.
+    file_put_contents($path, $json); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 }
 
 function csfc_render_converter_page() {
@@ -401,11 +396,11 @@ function csfc_render_converter_page() {
         }
 
         echo '<tr>';
-        echo '<td><input type="checkbox" name="include[' . $id . ']" value="1" checked aria-label="' . esc_attr__('Include', 'cs2fs-converter') . '"></td>';
+        echo '<td><input type="checkbox" name="include[' . esc_attr($id) . ']" value="1" checked aria-label="' . esc_attr__('Include', 'cs2fs-converter') . '"></td>';
         echo '<td><strong>' . esc_html($snippet->name) . '</strong><br><span class="description">' . esc_html(wp_trim_words(csfc_plain_description($snippet->description ?? ''), 20)) . '</span></td>';
         echo '<td><code>' . esc_html($snippet->scope) . '</code></td>';
         echo '<td>' . esc_html($mapping['type'] . ' / ' . $mapping['run_at']) . '</td>';
-        echo '<td><select name="override_type[' . $id . ']">
+        echo '<td><select name="override_type[' . esc_attr($id) . ']">
             <option value="">' . esc_html__('Auto', 'cs2fs-converter') . '</option>
             <option value="php">' . esc_html__('PHP', 'cs2fs-converter') . '</option>
             <option value="php_content">' . esc_html__('PHP + HTML', 'cs2fs-converter') . '</option>
@@ -514,6 +509,7 @@ function csfc_import_local_snippets() {
         ]);
         $meta['status'] = 'draft';
         if (empty($meta['name'])) {
+            /* translators: %s: date and time of the import */
             $meta['name'] = sprintf(__('Imported Snippet %s', 'cs2fs-converter'), current_time('mysql'));
         }
         $meta['priority'] = is_numeric($meta['priority']) ? (int) $meta['priority'] : 10;
@@ -537,7 +533,8 @@ function csfc_import_local_snippets() {
                 $decoded = '<?php' . PHP_EOL . $decoded;
             }
         } elseif (($meta['type'] ?? '') === 'php_content') {
-            $decoded = apply_filters('fluent_snippets/sanitize_mixed_content', $decoded, $meta);
+            // Fluent Snippets' own filter, applied as its importer does.
+            $decoded = apply_filters('fluent_snippets/sanitize_mixed_content', $decoded, $meta); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
             if (is_wp_error($decoded)) {
                 $skipped[] = ['name' => $meta['name'] ?? '', 'reason' => 'sanitize_failed', 'message' => $decoded->get_error_message()];
                 continue;
@@ -661,6 +658,7 @@ function csfc_enqueue_local_import_button($hook) {
         'strings' => [
             'buttonText' => __('Import local (CS2FS Converter)', 'cs2fs-converter'),
             'importingText' => __('Importing...', 'cs2fs-converter'),
+            /* translators: %d: number of imported snippets */
             'successWithCount' => __('Import completed. Added %d snippet(s).', 'cs2fs-converter'),
             'successGeneric' => __('Import finished.', 'cs2fs-converter'),
             'failure' => __('Import failed.', 'cs2fs-converter'),
