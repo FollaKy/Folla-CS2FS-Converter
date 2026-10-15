@@ -6,8 +6,7 @@ Snippets / Code Snippets Pro entries into a Fluent Snippets import, plus an
 tool in `../CS2FS` (Aug 2025), which does the same from an export file and is
 not developed further.
 
-GitHub: `FollaKy/Folla-CS2FS-Migrator` (the plugin header's Plugin URI still
-says `…-Converter`). Text domain `cs2fs-converter`; EN, de_DE, fi.
+GitHub: `FollaKy/Folla-CS2FS-Converter` (renamed from `…-Migrator`). Text domain `cs2fs-converter`; EN, de_DE, fi.
 
 ## Status (1.1, 2026-10-15)
 

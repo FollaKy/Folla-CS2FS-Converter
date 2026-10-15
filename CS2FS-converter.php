@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:  CS2FS Converter
- * Plugin URI:   https://github.com/FollaKy/Folla-CS2FS-Migrator
+ * Plugin URI:   https://github.com/FollaKy/Folla-CS2FS-Converter
  * Description:  Convert Code Snippets (from wp_snippets table) into Fluent Snippets compatible JSON, save to uploads, and add a one-click "Import local" button in Fluent Snippets.
  * Author:       Olivier Fontana | Folla Ky
  * Author URI:   https://github.com/follaky
