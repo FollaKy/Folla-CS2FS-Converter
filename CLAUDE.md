@@ -22,9 +22,15 @@ Also tested 2026-10-15 after updating the local site to Code Snippets 4.0.0
 (schema migrated, `condition_id` present): condition rows are skipped, the
 conditional snippet is flagged, and the 15 earlier snippets re-export with
 identical code (imported as duplicates). Code Snippets 4's flat files are an
-execution cache; the DB table is still the source. Plan: offer 1.1 as a free
-(0 €) product in the folla.fi shop. Open: de_DE/fi translations lack the new 1.1 strings;
-release zip not built.
+execution cache; the DB table is still the source.
+
+**Distribution: wordpress.org** (decided 2026-10-15; Fluent support suggested
+it). So no License Server / licence client: wp.org ships updates. The folla.fi
+shop can at most carry a 0 € page linking to the wp.org listing. Plugin Check
+1.x: no errors (commit 78025fa). Translations de_DE/fi complete. Submission zip:
+`cs2fs-converter-1.1.zip` (gitignored; folder `cs2fs-converter/`, slug
+`cs2fs-converter` = text domain). Next: user submits at
+wordpress.org/plugins/developers/add/; after approval, SVN + banner/icon assets.
 
 The defect list below is the original 2026-10-14 review, kept for reference.
 
