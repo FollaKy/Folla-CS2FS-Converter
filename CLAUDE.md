@@ -28,8 +28,8 @@ it). So no License Server / licence client: wp.org ships updates. The folla.fi
 shop can at most carry a 0 € page linking to the wp.org listing. Plugin Check
 1.x: no errors (commit 78025fa). Translations de_DE/fi complete. Submission zip:
 `cs2fs-converter-1.1.zip` (gitignored; folder `cs2fs-converter/`, slug
-`cs2fs-converter` = text domain). Next: user submits at
-wordpress.org/plugins/developers/add/; after approval, SVN + banner/icon assets.
+`cs2fs-converter` = text domain). Submitted to wp.org 2026-10-15; waiting for the review
+e-mail. After approval: SVN + banner/icon assets.
 
 The defect list below is the original 2026-10-14 review, kept for reference.
 
