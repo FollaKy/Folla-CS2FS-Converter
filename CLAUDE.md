@@ -31,6 +31,11 @@ shop can at most carry a 0 € page linking to the wp.org listing. Plugin Check
 `cs2fs-converter` = text domain). Submitted to wp.org 2026-10-15; waiting for the review
 e-mail. After approval: SVN + banner/icon assets.
 
+Review reply 2026-10-18 (fixed, zip rebuilt): no bundled .po/.mo and no
+`load_plugin_textdomain()` (WP ≥ 4.6 loads wp.org packs itself). The de_DE/fi
+.po/.mo now live in `translations/` (not packaged) for import into
+translate.wordpress.org after approval; `languages/` ships only the .pot.
+
 The defect list below is the original 2026-10-14 review, kept for reference.
 
 Sources used for the review:

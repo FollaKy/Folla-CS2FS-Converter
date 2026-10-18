@@ -31,15 +31,8 @@ add_action('wp_ajax_fluent_snippets_import_local', 'csfc_import_local_snippets')
 add_action('admin_enqueue_scripts', 'csfc_enqueue_local_import_button');
 add_filter('fluent_snippets_asset_listed_slugs', 'csfc_whitelist_assets');
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'csfc_plugin_action_links');
-add_action('init', 'csfc_load_textdomain');
 add_action('admin_notices', 'csfc_dependency_notices');
 add_action('admin_enqueue_scripts', 'csfc_enqueue_admin_styles');
-
-function csfc_load_textdomain() {
-    // Bundled de_DE and fi translations; translate.wordpress.org packs take precedence once they exist.
-    load_plugin_textdomain( // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
-        'cs2fs-converter', false, dirname(plugin_basename(__FILE__)) . '/languages');
-}
 
 function csfc_plugin_action_links($links) {
     $settings_link = '<a href="' . esc_url(admin_url('tools.php?page=cs2fs-converter')) . '">' . esc_html__('Converter', 'cs2fs-converter') . '</a>';

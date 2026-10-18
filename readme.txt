@@ -97,7 +97,7 @@ No. It's an independent tool by Folla Ky and isn't affiliated with either plugin
 * Snippets that were active, had a condition, run once or are shortcodes are flagged.
 * The code is read on the server instead of being sent through the form.
 * The saved export gets a random file name and is blocked from the web.
-* German and Finnish translations are complete, and the Finnish one now loads.
+* Translations come from translate.wordpress.org; the plugin no longer bundles its own.
 * Works on PHP 7.4. Needs WordPress 6.2 or newer.
 
 = 1.0 =
