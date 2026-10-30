@@ -29,7 +29,9 @@ shop can at most carry a 0 € page linking to the wp.org listing. Plugin Check
 1.x: no errors (commit 78025fa). Translations de_DE/fi complete. Submission zip:
 `cs2fs-converter-1.1.zip` (gitignored; folder `cs2fs-converter/`, slug
 `cs2fs-converter` = text domain). Submitted to wp.org 2026-10-15; waiting for the review
-e-mail. After approval: SVN + banner/icon assets.
+e-mail. Approved (slug created 2026-10-23); 1.1 committed to SVN trunk + tags/1.1
+2026-10-30 (r3774849). Still open: banner/icon in SVN `assets/`, import the
+de_DE/fi translations into translate.wordpress.org.
 
 Review reply 2026-10-18 (fixed, zip rebuilt): no bundled .po/.mo and no
 `load_plugin_textdomain()` (WP ≥ 4.6 loads wp.org packs itself). The de_DE/fi
