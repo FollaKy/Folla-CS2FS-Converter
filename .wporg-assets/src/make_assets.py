@@ -75,7 +75,7 @@ def banner(w, h):
     d.text((x + cw + 10 * u, 124 * u), "to", font=sub, fill=MUTED)
     tw = d.textlength("to", font=sub)
     d.text((x + cw + tw + 20 * u, 124 * u), "Fluent Snippets", font=sub, fill=TEAL)
-    d.text((x, 160 * u), "Every snippet in the right place.", font=font("Inter.ttf", int(16 * u), 400), fill=MUTED)
+    d.text((x, 160 * u), "Import your snippets in one click.", font=font("Inter.ttf", int(16 * u), 400), fill=MUTED)
 
     # Cards, right: a stack on each side with an arrow between
     cw_, ch = 104 * u, 120 * u
